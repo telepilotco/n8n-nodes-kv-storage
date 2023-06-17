@@ -30,7 +30,7 @@ export class KVStorage implements INodeType {
 		outputs: ['main'],
 		properties: [
 			{
-				displayName: 'Scope',
+				displayName: 'Scopes',
 				name: 'scope',
 				type: 'options',
 				options: [

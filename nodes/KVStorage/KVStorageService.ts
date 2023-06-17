@@ -16,6 +16,12 @@ export class KVStorageService {
 
 	private map: Record<string, string> = {};
 
+	private workflowListenersMap: Record<number, ((a: IDataObject)=>void)[]> = {}
+	private instanceListeners: ((a: IDataObject)=>void)[] = []
+	private executionListeners: ((a: IDataObject)=>void)[] = []
+
+	private allListeners: ((a: IDataObject)=>void)[] = []
+
 	constructor() {
 
 	}
@@ -87,6 +93,43 @@ export class KVStorageService {
 		debug("setValue: key=" + key + ";val=" + val + ";scope=" + scope + ";specifier=" + specifier)
 		const scopedKey = this.composeScopeKey(key, scope, specifier);
 		this.map[scopedKey] = val;
+
+		const timestamp = Date.now()
+		const event = {
+			scope,
+			specifier,
+			key,
+			val,
+			timestamp
+		}
+
+		if (this.allListeners.length > 0) {
+			this.allListeners.map((callback) => {
+				callback(event)
+			})
+		}
+
+		if (scope === Scope.INSTANCE && this.instanceListeners.length > 0) {
+			this.instanceListeners.map((callback) => {
+				callback(event)
+			})
+		}
+
+		if (scope === Scope.EXECUTION && this.executionListeners.length > 0) {
+			this.executionListeners.map((callback) => {
+				callback(event)
+			})
+		}
+		if (scope === Scope.WORKFLOW) {
+			Object.keys(this.workflowListenersMap).map(k => {
+				if (specifier === k) {
+					this.workflowListenersMap[Number(k)].map(callback => {
+						callback(event)
+					})
+				}
+			})
+		}
+
 		return { 'result': "OK" };
 	}
 
@@ -101,13 +144,74 @@ export class KVStorageService {
 			return `scope:${scope}-${specifier}:${key}`
 		}
 		const scopedKey = `scope:${scope}:${key}`;
-		debug(scopedKey)
+		debug("scopedKey=" + scopedKey)
 		return scopedKey;
 	}
 
 	private getKey(scopedKey: string): string {
 		const match = scopedKey.match(/scope:\w+-.*:(.*)/)
 		return  match != null ? match[1]: "EMPTY";
+	}
+
+	addListener(scope: Scope, specifier: string, callback: (a: IDataObject)=>void) {
+		debug("addListener: scope=" + scope + ";specifier=" + specifier)
+		if (scope == Scope.WORKFLOW) {
+			const workflowListenersMapKeys = Object.keys(this.workflowListenersMap)
+			debug("workflowListenersMapKeys: " + workflowListenersMapKeys)
+
+			const keys = specifier.split(",").map(s=>s.trim()).filter(s=>s.length>0)
+
+			keys.map( (key) => {
+				if (!workflowListenersMapKeys.includes(key)) {
+					debug("initialized with callback")
+					this.workflowListenersMap[Number(key)] = [callback];
+				} else {
+					debug("pushed callback")
+					this.workflowListenersMap[Number(key)].push(callback);
+				}
+			})
+		} else if (scope == Scope.EXECUTION) {
+			debug("pushed callback")
+			this.executionListeners.push(callback)
+			debug("this.executionListeners.length=" + this.executionListeners.length)
+		} else if (scope == Scope.INSTANCE) {
+			debug("pushed callback")
+			this.instanceListeners.push(callback)
+			debug("this.instanceListeners.length=" + this.instanceListeners.length)
+		} else if (scope == Scope.ALL) {
+			debug("pushed callback")
+			this.allListeners.push(callback)
+			debug("this.allListeners.length=" + this.allListeners.length)
+		}
+	}
+
+	removeListener(scope: Scope, specifier: string, callback: (a: IDataObject)=>void) {
+		debug("removeListener: scope=" + scope + ";specifier=" + specifier)
+		if (scope == Scope.WORKFLOW) {
+			const workflowListenersMapKeys = Object.keys(this.workflowListenersMap)
+
+			const keys = specifier.split(",").map(s=>s.trim()).filter(s=>s.length>0)
+
+			keys.map( (key) => {
+				if (workflowListenersMapKeys.includes(key)) {
+					debug("this.workflowListenersMap["+key+'].length=' + this.workflowListenersMap[Number(key)].length)
+					this.workflowListenersMap[Number(key)] = this.workflowListenersMap[Number(key)].filter(cb => cb != callback)
+					debug("this.workflowListenersMap["+key+'].length=' + this.workflowListenersMap[Number(key)].length)
+				}
+			})
+		} else if (scope == Scope.EXECUTION) {
+			debug("this.executionListeners.length=" + this.executionListeners.length)
+			this.executionListeners = this.executionListeners.filter(cb => cb != callback)
+			debug("this.executionListeners.length=" + this.executionListeners.length)
+		} else if (scope == Scope.INSTANCE) {
+			debug("this.instanceListeners.length=" + this.instanceListeners.length)
+			this.instanceListeners = this.instanceListeners.filter(cb => cb != callback)
+			debug("this.instanceListeners.length=" + this.instanceListeners.length)
+		} else if (scope == Scope.ALL) {
+			debug("this.allListeners.length=" + this.allListeners.length)
+			this.allListeners = this.allListeners.filter(cb => cb != callback)
+			debug("this.allListeners.length=" + this.allListeners.length)
+		}
 	}
 
 
