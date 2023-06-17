@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-kv-storage.KVStorage",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Storage"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://telepilot.co/documentation/saving-variables-in-n8n-with-kv-storage-node/"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://telepilot.co/documentation/saving-variables-in-n8n-with-kv-storage-node"
+			}
+		]
+	}
+}
