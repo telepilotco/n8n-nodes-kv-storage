@@ -1,24 +1,24 @@
-
 import {
 	IDataObject,
 	INodeType,
-	INodeTypeDescription, ITriggerFunctions, ITriggerResponse
-} from "n8n-workflow";
-import { KVStorageService, Scope } from "./KVStorageService";
-import { Container } from "typedi";
+	INodeTypeDescription,
+	ITriggerFunctions,
+	ITriggerResponse,
+} from 'n8n-workflow';
+import { KvStorageService, Scope } from './KvStorageService';
+import { Container } from 'typedi';
 
 // const debug = require('debug')('kv-storage');
 // import { Container } from 'typedi';
 
 const debug = require('debug')('kv-storage');
 
-
-export class KVStorageTrigger implements INodeType {
+export class KvStorageTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		// Basic node details will go here
 		displayName: 'Key-Value Storage Trigger',
 		name: 'kvStorageTrigger',
-		icon: 'file:KVStorage.svg',
+		icon: 'file:KvStorage.svg',
 		group: ['trigger'],
 		version: 1,
 		description: 'Key-Value Storage change listener',
@@ -49,9 +49,9 @@ export class KVStorageTrigger implements INodeType {
 					{
 						name: 'Instance',
 						value: Scope.INSTANCE,
-					}
+					},
 				],
-				default: Scope.WORKFLOW,
+				default: 'WORKFLOW',
 				noDataExpression: true,
 				required: true,
 				description: 'Scope of Key-Value pair',
@@ -64,32 +64,32 @@ export class KVStorageTrigger implements INodeType {
 				required: true,
 				placeholder: '41,42,43,102',
 				displayOptions: {
-					show:	{
-							scope: [Scope.WORKFLOW]
-						}
+					show: {
+						scope: [Scope.WORKFLOW],
+					},
 				},
-				description: 'Comma-separated list of Workflow IDs.'
+				description: 'Comma-separated list of Workflow IDs',
 			},
 		],
 	};
 
 	// @ts-ignore
 	async trigger(this: ITriggerFunctions): Promise<ITriggerResponse> {
-		const service = Container.get(KVStorageService);
+		const service = Container.get(KvStorageService);
 
 		const scopeVar = this.getNodeParameter('scope', 0) as keyof typeof Scope;
 		const specifier = this.getNodeParameter('specifier', 0) as string;
 
-		const scope = Scope[scopeVar]
+		const scope = Scope[scopeVar];
 
 		// const data = {'tst': 24}
 		// this.emit([this.helpers.returnJsonArray([data])]);
 
 		const _listener = (a: IDataObject) => {
 			_emit(a);
-		}
+		};
 
-		service.addListener(scope, specifier, _listener)
+		service.addListener(scope, specifier, _listener);
 
 		async function closeFunction() {
 			debug('closeFunction');
@@ -98,7 +98,7 @@ export class KVStorageTrigger implements INodeType {
 
 		const _emit = (data: IDataObject) => {
 			this.emit([this.helpers.returnJsonArray([data])]);
-		}
+		};
 
 		const manualTriggerFunction = async () => {
 			await new Promise((resolve, reject) => {
@@ -111,13 +111,13 @@ export class KVStorageTrigger implements INodeType {
 				}, 30000);
 
 				const _listener2 = (a: IDataObject) => {
-						_emit(a);
+					_emit(a);
 
-						clearTimeout(timeoutHandler);
-						service.removeListener(scope, specifier, _listener2);
-						resolve(true);
-				}
-				service.addListener(scope, specifier, _listener2)
+					clearTimeout(timeoutHandler);
+					service.removeListener(scope, specifier, _listener2);
+					resolve(true);
+				};
+				service.addListener(scope, specifier, _listener2);
 			});
 		};
 
@@ -128,4 +128,4 @@ export class KVStorageTrigger implements INodeType {
 	}
 }
 
-exports.KVStorageTrigger = KVStorageTrigger;
+exports.KvStorageTrigger = KvStorageTrigger;
