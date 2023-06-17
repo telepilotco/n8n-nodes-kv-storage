@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import { IExecuteFunctions } from 'n8n-core';
 
 import { INodeExecutionData, INodeType, INodeTypeDescription } from 'n8n-workflow';
+import { Container } from "typedi";
+import { KVStorageService } from "./KVStorageService";
 
 // const debug = require('debug')('kv-storage');
 // import { Container } from 'typedi';
@@ -63,8 +65,8 @@ export class KVStorage implements INodeType {
 						action: 'List all keys in Scope',
 					},
 					{
-						name: 'Get All Values',
-						value: 'getAllValues',
+						name: 'Get All KeyValues',
+						value: 'getAllKeyValues',
 						action: 'Get All Values and Keys from Scope',
 					},
 					{
@@ -98,7 +100,7 @@ export class KVStorage implements INodeType {
 			},
 			{
 				displayName: 'Value',
-				name: 'value',
+				name: 'val',
 				type: 'string',
 				required: true,
 				displayOptions: {
@@ -118,7 +120,35 @@ export class KVStorage implements INodeType {
 	// The execute method will go here
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-		const returnData = [{'test': 'test'}];
+		const returnData = [];
+
+		const scope = this.getNodeParameter('scope', 0) as string;
+		const operation = this.getNodeParameter('operation', 0) as string;
+
+		const service = Container.get(KVStorageService);
+
+		if (operation === 'listAllScopeKeys') {
+			const result = service.getAllKeys(scope);
+			returnData.push(result);
+
+		} else if (operation === 'getAllKeyValues') {
+			const result = service.getAllKeyValues();
+			returnData.push(result);
+
+		} else if (operation === 'getValue') {
+			const key = this.getNodeParameter('key', 0) as string;
+
+			const result = service.getValue(key);
+			returnData.push(result);
+
+		} else if (operation === 'setValue') {
+			const key = this.getNodeParameter('key', 0) as string;
+			const val = this.getNodeParameter('val', 0) as string;
+
+			const result = service.setValue(key, val);
+			returnData.push(result);
+		}
+
 		return [this.helpers.returnJsonArray(returnData)];
 	}
 }
