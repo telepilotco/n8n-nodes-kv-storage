@@ -1,12 +1,16 @@
 import 'reflect-metadata';
-import { IExecuteFunctions } from 'n8n-core';
+import { IExecuteFunctions } from "n8n-core";
 
-import { INodeExecutionData, INodeType, INodeTypeDescription } from 'n8n-workflow';
+import {
+	INodeExecutionData,
+	INodeType,
+	INodeTypeDescription
+} from "n8n-workflow";
 import { Container } from "typedi";
-import { KVStorageService } from "./KVStorageService";
+import { KVStorageService, Scope } from "./KVStorageService";
 
-// const debug = require('debug')('kv-storage');
-// import { Container } from 'typedi';
+// @ts-ignore
+const debug = require('debug')('kv-storage');
 
 export class KVStorage implements INodeType {
 	description: INodeTypeDescription = {
@@ -32,18 +36,18 @@ export class KVStorage implements INodeType {
 				options: [
 					{
 						name: 'Execution',
-						value: 'execution',
+						value: Scope.EXECUTION,
 					},
 					{
 						name: 'Workflow',
-						value: 'workflow',
+						value: Scope.WORKFLOW,
 					},
 					{
 						name: 'Instance',
-						value: 'instance',
+						value: Scope.INSTANCE,
 					}
 				],
-				default: 'instance',
+				default: Scope.INSTANCE,
 				noDataExpression: true,
 				required: true,
 				description: 'Scope of Key-Value pair',
@@ -55,34 +59,40 @@ export class KVStorage implements INodeType {
 				type: 'options',
 				displayOptions: {
 					show: {
-						scope: ['execution', 'workflow', 'instance'],
+						scope: [Scope.EXECUTION, Scope.WORKFLOW, Scope.INSTANCE],
 					},
 				},
 				options: [
 					{
-						name: 'List All Scope Keys',
+						name: 'List All KeyValues in ALL Scopes',
+						value: 'listAllKeyValuesInAllScopes',
+						action: 'Get All Values and Keys in ALL Scopes (Debug)',
+					},
+					{
+						name: 'List All KeyValues in Scope',
+						value: 'listAllKeyValues',
+						action: 'List All Values and Keys in Scope',
+					},
+					{
+						name: 'List All Keys in Scope',
 						value: 'listAllScopeKeys',
 						action: 'List all keys in Scope',
 					},
 					{
-						name: 'Get All KeyValues',
-						value: 'getAllKeyValues',
-						action: 'Get All Values and Keys from Scope',
-					},
-					{
-						name: 'Get Value',
+						name: 'Get Value by Key in Scope',
 						value: 'getValue',
-						action: 'Get Value from Scope',
+						action: 'Get Value by Key in Scope',
 					},
 					{
-						name: 'Set Value',
+						name: 'Set Value for Key in Scope',
 						value: 'setValue',
-						action: 'Set Storage Value in Scope',
+						action: 'Set Value for Key in Scope',
 					},
 				],
-				default: 'login',
+				default: 'getValue',
 				noDataExpression: true,
 			},
+
 			{
 				displayName: 'Key',
 				name: 'key',
@@ -91,13 +101,14 @@ export class KVStorage implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['getValue', 'setValue'],
-						scope: ['execution', 'workflow', 'instance'],
+						scope: [Scope.EXECUTION, Scope.WORKFLOW, Scope.INSTANCE],
 					},
 				},
 				default: '',
 				placeholder: 'my-example-key',
 				description: 'Key',
 			},
+
 			{
 				displayName: 'Value',
 				name: 'val',
@@ -106,12 +117,28 @@ export class KVStorage implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['setValue'],
-						scope: ['execution', 'workflow', 'instance'],
+						scope: [Scope.EXECUTION, Scope.WORKFLOW, Scope.INSTANCE],
 					},
 				},
 				default: '',
 				placeholder: 'my-example-value',
 				description: 'Value',
+			},
+
+			{
+				displayName: 'ExecutionId',
+				name: 'executionId',
+				type: 'string',
+				required: true,
+				displayOptions: {
+					show: {
+						operation: ['listAllKeyValues', 'listAllScopeKeys', 'getValue', 'setValue'],
+						scope: [Scope.EXECUTION],
+					},
+				},
+				default: '={{ $execution.id }}',
+				placeholder: '={{ $execution.id }}',
+				description: 'Do not change this - this is unique identifier of Execution',
 			},
 
 
@@ -122,33 +149,52 @@ export class KVStorage implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const returnData = [];
 
-		const scope = this.getNodeParameter('scope', 0) as string;
+		const scopeVar = this.getNodeParameter('scope', 0) as keyof typeof Scope;
 		const operation = this.getNodeParameter('operation', 0) as string;
+
+		const scope = Scope[scopeVar];
+		let specifier = '';
+
+		switch (scope) {
+			case Scope.EXECUTION:
+				specifier = this.getNodeParameter('executionId', 0) as string;
+				break;
+			case Scope.WORKFLOW:
+				specifier = this.getWorkflow().id as string;
+				break;
+			case Scope.INSTANCE:
+				specifier = "N8N";
+				break;
+		}
 
 		const service = Container.get(KVStorageService);
 
-		if (operation === 'listAllScopeKeys') {
-			const result = service.getAllKeys(scope);
+		if (operation === 'listAllKeyValuesInAllScopes') {
+			const result = service.listAllKeyValuesInAllScopes();
 			returnData.push(result);
 
-		} else if (operation === 'getAllKeyValues') {
-			const result = service.getAllKeyValues();
+		} else if (operation === 'listAllScopeKeys') {
+			const result = service.listAllKeysInScope(scope, specifier);
+			returnData.push(result);
+
+		} else if (operation === 'listAllKeyValues') {
+			const result = service.listAllKeyValuesInScope(scope, specifier);
 			returnData.push(result);
 
 		} else if (operation === 'getValue') {
 			const key = this.getNodeParameter('key', 0) as string;
 
-			const result = service.getValue(key);
+			const result = service.getValue(key, scope, specifier);
 			returnData.push(result);
 
 		} else if (operation === 'setValue') {
 			const key = this.getNodeParameter('key', 0) as string;
 			const val = this.getNodeParameter('val', 0) as string;
 
-			const result = service.setValue(key, val);
+			const result = service.setValue(key, val, scope, specifier);
 			returnData.push(result);
 		}
-
+this.getWorkflow().id;
 		return [this.helpers.returnJsonArray(returnData)];
 	}
 }

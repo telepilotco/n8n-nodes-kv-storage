@@ -13,8 +13,10 @@ build: clean
 	npm link
 	cd ~/.n8n/ && mkdir -p nodes ; cd nodes ; npm link n8n-nodes-kv-storage
 
-run: build
+run-only:
 	DEBUG=kv-storage EXECUTIONS_PROCESS=main n8n start
+
+run: build run-only
 
 publish:
 	npm publish
