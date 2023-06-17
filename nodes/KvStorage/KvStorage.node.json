@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-kv-storage.KVStorage",
+	"node": "n8n-nodes-kv-storage.KvStorage",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Storage"],

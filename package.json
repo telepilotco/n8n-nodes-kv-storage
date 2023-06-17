@@ -25,17 +25,19 @@
   "scripts": {
     "build": "tsc && gulp",
     "dev": "tsc --watch",
-    "format": "prettier nodes credentials --write",
-    "lint": "tslint -p tsconfig.json -c tslint.json && eslint nodes credentials package.json",
-    "lintfix": "tslint --fix -p tsconfig.json -c tslint.json && eslint nodes credentials package.json --fix"
+    "format": "prettier nodes --write",
+    "lint": "tslint -p tsconfig.json -c tslint.json && eslint nodes package.json",
+    "lintfix": "tslint --fix -p tsconfig.json -c tslint.json && eslint nodes package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes"
   },
   "files": [
     "dist"
   ],
   "n8n": {
+    "n8nNodesApiVersion": 1,
     "nodes": [
-      "dist/nodes/KVStorage/KVStorage.node.js",
-      "dist/nodes/KVStorage/KVStorageTrigger.node.js"
+      "dist/nodes/KvStorage/KvStorage.node.js",
+      "dist/nodes/KvStorage/KvStorageTrigger.node.js"
     ]
   },
   "devDependencies": {
@@ -43,6 +45,7 @@
     "@types/node": "^14.14.6",
     "@types/request-promise-native": "~1.0.15",
     "@typescript-eslint/parser": "~5.45",
+    "eslint-plugin-n8n-nodes-base": "^1.11.0",
     "gulp": "^4.0.2",
     "n8n-core": "^0.161.0",
     "n8n-workflow": "^0.143.0",
