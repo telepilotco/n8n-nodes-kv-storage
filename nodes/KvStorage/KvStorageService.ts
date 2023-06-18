@@ -11,9 +11,16 @@ export enum Scope {
 	INSTANCE = 'INSTANCE',
 }
 
+export enum EventType {
+	ANY = 'ANY',
+	ADDED = 'added',
+	UPDATED = 'updated',
+	DELETED = 'deleted',
+}
+
 @Service()
 export class KvStorageService {
-	private map: Record<string, string> = {};
+	private map: Record<string, Array<string | number>> = {};
 	private mapExpiration: Record<string, number> = {};
 
 	private workflowListenersMap: Record<number, Array<(a: IDataObject) => void>> = {};
@@ -67,11 +74,15 @@ export class KvStorageService {
 					//@ts-ignore
 					matchedEntries[entryKey].entries[key] = this.map[scopedKey];
 				} else {
-					matchedEntries[entryKey] = {
+					const e = {
 						scope,
 						specifier,
 						entries: { [key]: this.map[scopedKey] } as IDataObject,
 					} as IDataObject;
+					if (Object.keys(this.mapExpiration).includes(scopedKey)) {
+						e.expiresAt = this.mapExpiration[scopedKey];
+					}
+					matchedEntries[entryKey] = e;
 				}
 			});
 		return matchedEntries;
@@ -120,8 +131,8 @@ export class KvStorageService {
 		const mapKeys = Object.keys(this.map);
 
 		let res = false;
-		let val = '';
-		const operation = 'deleted';
+		let val: Array<string | number> = [];
+		const eventType = EventType.DELETED;
 		const timestamp = Date.now();
 
 		if (mapKeys.includes(scopedKey)) {
@@ -132,7 +143,7 @@ export class KvStorageService {
 		}
 
 		const event = {
-			operation,
+			eventType,
 			scope,
 			specifier,
 			key,
@@ -162,11 +173,14 @@ export class KvStorageService {
 		}
 
 		const timestamp = Date.now();
-		let operation = 'added';
+		let eventType = EventType.ADDED;
+		if (Object.keys(this.map).includes(scopedKey)) {
+			eventType = EventType.UPDATED;
+		}
 		const oldVal = this.map[scopedKey];
-		this.map[scopedKey] = val;
+		this.map[scopedKey] = [val];
 		const event: IDataObject = {
-			operation,
+			eventType,
 			scope,
 			specifier,
 			key,
@@ -176,14 +190,13 @@ export class KvStorageService {
 		};
 
 		if (Object.keys(this.map).includes(scopedKey)) {
-			operation = 'edited';
 			event.oldVal = oldVal;
-			event.operation = operation;
+			event.eventType = eventType;
 		}
 
 		this.sendEvent(event, scope, specifier);
 
-		return { result: 'OK' };
+		return { val: this.map[scopedKey] };
 	}
 
 	private sendEvent(event: IDataObject, scope: Scope, specifier: string) {
