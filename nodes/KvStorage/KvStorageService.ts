@@ -14,6 +14,7 @@ export enum Scope {
 @Service()
 export class KvStorageService {
 	private map: Record<string, string> = {};
+	private mapExpiration: Record<string, number> = {};
 
 	private workflowListenersMap: Record<number, Array<(a: IDataObject) => void>> = {};
 	private instanceListeners: Array<(a: IDataObject) => void> = [];
@@ -21,7 +22,27 @@ export class KvStorageService {
 
 	private allListeners: Array<(a: IDataObject) => void> = [];
 
-	constructor() {}
+	constructor() {
+		debug('constructor');
+		setInterval(() => {
+			debug('setInterval');
+			this.deleteExpiredEntries();
+		}, 1 * 1000);
+	}
+
+	private deleteExpiredEntries() {
+		const expirationKeys = Object.keys(this.mapExpiration);
+		debug('deleteExpiredEntries.length=' + expirationKeys.length);
+
+		const expiredKeys = expirationKeys.filter((k) => {
+			return this.mapExpiration[k] <= Date.now();
+		});
+
+		expiredKeys.map((k) => {
+			debug('deleteing expired key=' + k);
+			this.deleteKeyWithScopedKey(k);
+		});
+	}
 
 	listAllKeyValuesInAllScopes(): IDataObject {
 		debug('listAllKeyValuesInAllScopes: ');
@@ -83,26 +104,89 @@ export class KvStorageService {
 		return { entries: matchedEntries, scope, specifier };
 	}
 
-	getValue(key: string, scope: Scope, specifier = ''): IDataObject {
-		debug('getValue: key=' + key + ';scope=' + scope + ';specifier=' + specifier);
-		const scopedKey = this.composeScopeKey(key, scope, specifier);
-		return { val: this.map[scopedKey] };
+	deleteKeyWithScopedKey(scopedKey: string): IDataObject {
+		const scopeKeyOf = this.getScope(scopedKey) as keyof typeof Scope;
+		const scope = Scope[scopeKeyOf];
+
+		const getSpecifier = this.getSpecifier(scopedKey);
+		const key = this.getKey(scopedKey);
+
+		return this.deleteKey(key, scope, getSpecifier);
 	}
 
-	setValue(key: string, val: string, scope: Scope, specifier = ''): IDataObject {
-		debug('setValue: key=' + key + ';val=' + val + ';scope=' + scope + ';specifier=' + specifier);
+	deleteKey(key: string, scope: Scope, specifier = ''): IDataObject {
+		debug('deleteKey: key=' + key + ';scope=' + scope + ';specifier=' + specifier);
 		const scopedKey = this.composeScopeKey(key, scope, specifier);
-		this.map[scopedKey] = val;
+		const mapKeys = Object.keys(this.map);
 
+		let res = false;
+		let val = '';
+		const operation = 'deleted';
 		const timestamp = Date.now();
+
+		if (mapKeys.includes(scopedKey)) {
+			res = true;
+			val = this.map[scopedKey];
+			delete this.map[scopedKey];
+			delete this.mapExpiration[scopedKey];
+		}
+
 		const event = {
+			operation,
 			scope,
 			specifier,
 			key,
 			val,
 			timestamp,
 		};
+		this.sendEvent(event, scope, specifier);
 
+		return { res };
+	}
+
+	getValue(key: string, scope: Scope, specifier = ''): IDataObject {
+		debug('getValue: key=' + key + ';scope=' + scope + ';specifier=' + specifier);
+		const scopedKey = this.composeScopeKey(key, scope, specifier);
+		return { val: this.map[scopedKey] };
+	}
+
+	setValue(key: string, val: string, scope: Scope, specifier = '', ttl = -1): IDataObject {
+		debug('setValue: key=' + key + ';val=' + val + ';scope=' + scope + ';specifier=' + specifier);
+		const scopedKey = this.composeScopeKey(key, scope, specifier);
+
+		let expiresAt = -1;
+		if (ttl > -1) {
+			expiresAt = Date.now() + ttl * 1000;
+			this.mapExpiration[scopedKey] = expiresAt;
+			debug('expiresAt=' + expiresAt);
+		}
+
+		const timestamp = Date.now();
+		let operation = 'added';
+		const oldVal = this.map[scopedKey];
+		this.map[scopedKey] = val;
+		const event: IDataObject = {
+			operation,
+			scope,
+			specifier,
+			key,
+			val,
+			timestamp,
+			expiresAt,
+		};
+
+		if (Object.keys(this.map).includes(scopedKey)) {
+			operation = 'edited';
+			event.oldVal = oldVal;
+			event.operation = operation;
+		}
+
+		this.sendEvent(event, scope, specifier);
+
+		return { result: 'OK' };
+	}
+
+	private sendEvent(event: IDataObject, scope: Scope, specifier: string) {
 		if (this.allListeners.length > 0) {
 			this.allListeners.map((callback) => callback(event));
 		}
@@ -121,8 +205,6 @@ export class KvStorageService {
 				}
 			});
 		}
-
-		return { result: 'OK' };
 	}
 
 	private composeScopeKey(key: string, scope: Scope, specifier = ''): string {
@@ -142,6 +224,16 @@ export class KvStorageService {
 
 	private getKey(scopedKey: string): string {
 		const match = scopedKey.match(/scope:\w+-.*:(.*)/);
+		return match !== null ? match[1] : 'EMPTY';
+	}
+
+	private getScope(scopedKey: string): string {
+		const match = scopedKey.match(/scope:(\w+)-.*:.*/);
+		return match !== null ? match[1] : 'EMPTY';
+	}
+
+	private getSpecifier(scopedKey: string): string {
+		const match = scopedKey.match(/scope:\w+-(.*):.*/);
 		return match !== null ? match[1] : 'EMPTY';
 	}
 
