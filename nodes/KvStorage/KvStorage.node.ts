@@ -26,38 +26,9 @@ export class KvStorage implements INodeType {
 		outputs: ['main'],
 		properties: [
 			{
-				displayName: 'Scopes',
-				name: 'scope',
-				type: 'options',
-				options: [
-					{
-						name: 'Execution',
-						value: Scope.EXECUTION,
-					},
-					{
-						name: 'Workflow',
-						value: Scope.WORKFLOW,
-					},
-					{
-						name: 'Instance',
-						value: Scope.INSTANCE,
-					},
-				],
-				default: 'INSTANCE',
-				noDataExpression: true,
-				required: true,
-				description: 'Scope of Key-Value pair',
-			},
-
-			{
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
-				displayOptions: {
-					show: {
-						scope: [Scope.EXECUTION, Scope.WORKFLOW, Scope.INSTANCE],
-					},
-				},
 				options: [
 					{
 						name: 'Get Value by Key in Scope',
@@ -90,6 +61,37 @@ export class KvStorage implements INodeType {
 			},
 
 			{
+				displayName: 'Scope',
+				name: 'scope',
+				type: 'options',
+				required: true,
+				displayOptions: {
+					show: {
+						operation: ['listAllKeyValues', 'listAllScopeKeys', 'getValue', 'setValue'],
+					},
+				},
+				options: [
+					{
+						name: 'ALL Scopes',
+						value: Scope.ALL,
+					},
+					{
+						name: 'Execution Scope',
+						value: Scope.EXECUTION,
+					},
+					{
+						name: 'Workflow Scope',
+						value: Scope.WORKFLOW,
+					},
+					{
+						name: 'Instance Scope',
+						value: Scope.INSTANCE,
+					},
+				],
+				default: 'WORKFLOW',
+			},
+
+			{
 				displayName: 'Key',
 				name: 'key',
 				type: 'string',
@@ -97,7 +99,6 @@ export class KvStorage implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['getValue', 'setValue'],
-						scope: [Scope.EXECUTION, Scope.WORKFLOW, Scope.INSTANCE],
 					},
 				},
 				default: '',
@@ -112,7 +113,6 @@ export class KvStorage implements INodeType {
 				displayOptions: {
 					show: {
 						operation: ['setValue'],
-						scope: [Scope.EXECUTION, Scope.WORKFLOW, Scope.INSTANCE],
 					},
 				},
 				default: '',
@@ -141,24 +141,29 @@ export class KvStorage implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const returnData = [];
 
-		const scopeVar = this.getNodeParameter('scope', 0) as keyof typeof Scope;
 		const operation = this.getNodeParameter('operation', 0) as string;
 
-		const scope = Scope[scopeVar];
 		let specifier = '';
+		let scope = Scope.ALL;
 
-		switch (scope) {
-			case Scope.EXECUTION:
-				specifier = this.getNodeParameter('executionId', 0) as string;
-				break;
-			case Scope.WORKFLOW:
-				specifier = this.getWorkflow().id as string;
-				break;
-			case Scope.INSTANCE:
-				specifier = 'N8N';
-				break;
-			default:
-				break;
+		try {
+			const scopeVar = this.getNodeParameter('scope', 0) as keyof typeof Scope;
+			scope = Scope[scopeVar];
+			switch (scope) {
+				case Scope.EXECUTION:
+					specifier = this.getNodeParameter('executionId', 0) as string;
+					break;
+				case Scope.WORKFLOW:
+					specifier = this.getWorkflow().id as string;
+					break;
+				case Scope.INSTANCE:
+					specifier = 'N8N';
+					break;
+				default:
+					break;
+			}
+		} catch (e) {
+			//no scope provided, we are in 'listAllKeyValuesInAllScopes' option
 		}
 
 		const service = Container.get(KvStorageService);

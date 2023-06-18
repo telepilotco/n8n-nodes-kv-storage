@@ -33,28 +33,27 @@ export class KvStorageTrigger implements INodeType {
 				displayName: 'Scope',
 				name: 'scope',
 				type: 'options',
+				required: true,
 				options: [
 					{
-						name: 'ALL',
+						name: 'ALL Scopes',
 						value: Scope.ALL,
 					},
 					{
-						name: 'Execution',
+						name: 'Execution Scope',
 						value: Scope.EXECUTION,
 					},
 					{
-						name: 'Workflow',
+						name: 'Workflow Scope',
 						value: Scope.WORKFLOW,
 					},
 					{
-						name: 'Instance',
+						name: 'Instance Scope',
 						value: Scope.INSTANCE,
 					},
 				],
 				default: 'WORKFLOW',
-				noDataExpression: true,
-				required: true,
-				description: 'Scope of Key-Value pair',
+				// placeholder: 'my-example-key',
 			},
 			{
 				displayName: 'Specifier',
@@ -81,9 +80,6 @@ export class KvStorageTrigger implements INodeType {
 		const specifier = this.getNodeParameter('specifier', 0) as string;
 
 		const scope = Scope[scopeVar];
-
-		// const data = {'tst': 24}
-		// this.emit([this.helpers.returnJsonArray([data])]);
 
 		const _listener = (a: IDataObject) => {
 			_emit(a);
