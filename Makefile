@@ -18,6 +18,11 @@ run-only:
 
 run: build run-only
 
+prepublish:
+	npm run lintfix
+	npm run format
+	npm run prepublishOnly
+
 publish:
 	npm publish
 
