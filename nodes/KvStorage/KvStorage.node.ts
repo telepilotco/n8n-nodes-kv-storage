@@ -134,6 +134,34 @@ export class KvStorage implements INodeType {
 				placeholder: '={{ $execution.ID }}',
 				description: 'Do not change this - this is unique identifier of Execution',
 			},
+			{
+				displayName: 'Expire',
+				name: 'expire',
+				type: 'boolean',
+				displayOptions: {
+					show: {
+						operation: ['setValue'],
+					},
+				},
+				default: true,
+				description: 'Whether to set a timeout on key',
+			},
+			{
+				displayName: 'TTL',
+				name: 'ttl',
+				type: 'number',
+				typeOptions: {
+					minValue: 1,
+				},
+				displayOptions: {
+					show: {
+						operation: ['setValue'],
+						expire: [true],
+					},
+				},
+				default: 60,
+				description: 'Number of seconds before key expiration',
+			},
 		],
 	};
 	// The execute method will go here
@@ -185,8 +213,9 @@ export class KvStorage implements INodeType {
 		} else if (operation === 'setValue') {
 			const key = this.getNodeParameter('key', 0) as string;
 			const val = this.getNodeParameter('val', 0) as string;
+			const ttl = this.getNodeParameter('ttl', 0, -1) as number;
 
-			const result = service.setValue(key, val, scope, specifier);
+			const result = service.setValue(key, val, scope, specifier, ttl);
 			returnData.push(result);
 		}
 
