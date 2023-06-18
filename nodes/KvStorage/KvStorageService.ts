@@ -131,13 +131,13 @@ export class KvStorageService {
 		const mapKeys = Object.keys(this.map);
 
 		let res = false;
-		let val: Array<string | number> = [];
+		let val_: Array<string | number> = [];
 		const eventType = EventType.DELETED;
 		const timestamp = Date.now();
 
 		if (mapKeys.includes(scopedKey)) {
 			res = true;
-			val = this.map[scopedKey];
+			val_ = this.map[scopedKey];
 			delete this.map[scopedKey];
 			delete this.mapExpiration[scopedKey];
 		}
@@ -147,7 +147,7 @@ export class KvStorageService {
 			scope,
 			specifier,
 			key,
-			val,
+			val: val_,
 			timestamp,
 		};
 		this.sendEvent(event, scope, specifier);
@@ -158,6 +158,48 @@ export class KvStorageService {
 	getValue(key: string, scope: Scope, specifier = ''): IDataObject {
 		debug('getValue: key=' + key + ';scope=' + scope + ';specifier=' + specifier);
 		const scopedKey = this.composeScopeKey(key, scope, specifier);
+		return { val: this.map[scopedKey] };
+	}
+
+	incrementValue(key: string, scope: Scope, specifier = '', ttl = -1): IDataObject {
+		debug('incrementValue: key=' + key + ';scope=' + scope + ';specifier=' + specifier);
+		const scopedKey = this.composeScopeKey(key, scope, specifier);
+
+		let expiresAt = -1;
+		if (ttl > -1) {
+			expiresAt = Date.now() + ttl * 1000;
+			this.mapExpiration[scopedKey] = expiresAt;
+			debug('expiresAt=' + expiresAt);
+		}
+
+		const timestamp = Date.now();
+		let eventType = EventType.ADDED;
+		if (Object.keys(this.map).includes(scopedKey)) {
+			eventType = EventType.UPDATED;
+		}
+
+		let oldVal = Number(this.map[scopedKey]);
+		if (!oldVal || oldVal === undefined) {
+			oldVal = 0;
+		}
+		this.map[scopedKey] = [oldVal + 1];
+		const event: IDataObject = {
+			eventType,
+			scope,
+			specifier,
+			key,
+			val: this.map[scopedKey],
+			timestamp,
+			expiresAt,
+		};
+
+		if (Object.keys(this.map).includes(scopedKey)) {
+			event.oldVal = oldVal;
+			event.eventType = eventType;
+		}
+
+		this.sendEvent(event, scope, specifier);
+
 		return { val: this.map[scopedKey] };
 	}
 

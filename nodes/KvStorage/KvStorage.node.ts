@@ -5,9 +5,6 @@ import { INodeExecutionData, INodeType, INodeTypeDescription } from 'n8n-workflo
 import { Container } from 'typedi';
 import { KvStorageService, Scope } from './KvStorageService';
 
-// @ts-ignore
-const debug = require('debug')('kv-storage');
-
 export class KvStorage implements INodeType {
 	description: INodeTypeDescription = {
 		// Basic node details will go here
@@ -34,6 +31,11 @@ export class KvStorage implements INodeType {
 						name: 'Get Value by Key in Scope',
 						value: 'getValue',
 						action: 'Get value by key in scope',
+					},
+					{
+						name: 'Increment Value by Key in Scope. Create Key if It Does Not Exist',
+						value: 'incrementValue',
+						action: 'Increment value by key in scope create key if it does not exist',
 					},
 					{
 						name: 'List All Keys in Scope',
@@ -67,7 +69,13 @@ export class KvStorage implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						operation: ['listAllKeyValues', 'listAllScopeKeys', 'getValue', 'setValue'],
+						operation: [
+							'listAllKeyValues',
+							'listAllScopeKeys',
+							'getValue',
+							'setValue',
+							'incrementValue',
+						],
 					},
 				},
 				options: [
@@ -98,7 +106,7 @@ export class KvStorage implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						operation: ['getValue', 'setValue'],
+						operation: ['getValue', 'setValue', 'incrementValue'],
 					},
 				},
 				default: '',
@@ -140,7 +148,7 @@ export class KvStorage implements INodeType {
 				type: 'boolean',
 				displayOptions: {
 					show: {
-						operation: ['setValue'],
+						operation: ['setValue', 'incrementValue'],
 					},
 				},
 				default: true,
@@ -155,7 +163,7 @@ export class KvStorage implements INodeType {
 				},
 				displayOptions: {
 					show: {
-						operation: ['setValue'],
+						operation: ['setValue', 'incrementValue'],
 						expire: [true],
 					},
 				},
@@ -216,6 +224,12 @@ export class KvStorage implements INodeType {
 			const ttl = this.getNodeParameter('ttl', 0, -1) as number;
 
 			const result = service.setValue(key, val, scope, specifier, ttl);
+			returnData.push(result);
+		} else if (operation === 'incrementValue') {
+			const key = this.getNodeParameter('key', 0) as string;
+			const ttl = this.getNodeParameter('ttl', 0, -1) as number;
+
+			const result = service.incrementValue(key, scope, specifier, ttl);
 			returnData.push(result);
 		}
 
