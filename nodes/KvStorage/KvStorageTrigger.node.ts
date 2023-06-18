@@ -5,7 +5,7 @@ import {
 	ITriggerFunctions,
 	ITriggerResponse,
 } from 'n8n-workflow';
-import { KvStorageService, Scope } from './KvStorageService';
+import { EventType, KvStorageService, Scope } from './KvStorageService';
 import { Container } from 'typedi';
 
 // const debug = require('debug')('kv-storage');
@@ -56,6 +56,32 @@ export class KvStorageTrigger implements INodeType {
 				// placeholder: 'my-example-key',
 			},
 			{
+				displayName: 'EventType',
+				name: 'eventType',
+				type: 'multiOptions',
+				default: [EventType.ANY],
+				required: true,
+				options: [
+					{
+						name: 'ANY',
+						value: EventType.ANY,
+					},
+					{
+						name: 'Added',
+						value: EventType.ADDED,
+					},
+					{
+						name: 'Updated',
+						value: EventType.UPDATED,
+					},
+					{
+						name: 'Deleted',
+						value: EventType.DELETED,
+					},
+				],
+				description: 'Specify which operations you would like to receive',
+			},
+			{
 				displayName: 'Specifier',
 				name: 'specifier',
 				type: 'string',
@@ -79,10 +105,14 @@ export class KvStorageTrigger implements INodeType {
 		const scopeVar = this.getNodeParameter('scope', 0) as keyof typeof Scope;
 		const specifier = this.getNodeParameter('specifier', 0) as string;
 
+		const eventTypes = this.getNodeParameter('eventType', [EventType.ANY]) as string;
+
 		const scope = Scope[scopeVar];
 
 		const _listener = (a: IDataObject) => {
-			_emit(a);
+			if (eventTypes.includes(a['eventType'] as string) || eventTypes.includes(EventType.ANY)) {
+				_emit(a);
+			}
 		};
 
 		service.addListener(scope, specifier, _listener);
@@ -107,11 +137,13 @@ export class KvStorageTrigger implements INodeType {
 				}, 30000);
 
 				const _listener2 = (a: IDataObject) => {
-					_emit(a);
+					if (eventTypes.includes(a['eventType'] as string) || eventTypes.includes(EventType.ANY)) {
+						_emit(a);
 
-					clearTimeout(timeoutHandler);
-					service.removeListener(scope, specifier, _listener2);
-					resolve(true);
+						clearTimeout(timeoutHandler);
+						service.removeListener(scope, specifier, _listener2);
+						resolve(true);
+					}
 				};
 				service.addListener(scope, specifier, _listener2);
 			});
