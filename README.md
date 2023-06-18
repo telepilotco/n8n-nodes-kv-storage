@@ -1,5 +1,14 @@
 # n8n-nodes-kv-storage
 
+<img src="https://telepilot.co/logos/kv-storage.svg" alt="KV Storage logo" width="64" />
+
+[n8n](https://www.n8n.io) community node that implements rudimentary key-value storage, stored in memory.
+It is created for use-cases, when usage of Database or Redis is not desired, and `StaticData` or `Code` are not enough. 
+
+`KV Storage` is putting values into buckets, that we called `Scopes`. 
+
+### Recommended n8n setup
+
 This node should be used with `EXECUTION_PROCESS=main`.
 
 You could also run it in `own` mode, but in then actually only EXECUTION scope will be working, 
