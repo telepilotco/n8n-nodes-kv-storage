@@ -8,9 +8,6 @@ import {
 import { EventType, KvStorageService, Scope } from './KvStorageService';
 import { Container } from 'typedi';
 
-// const debug = require('debug')('kv-storage');
-// import { Container } from 'typedi';
-
 const debug = require('debug')('kv-storage');
 
 export class KvStorageTrigger implements INodeType {
