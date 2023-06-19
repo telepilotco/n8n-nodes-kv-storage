@@ -58,7 +58,7 @@ This scope is not implemented.
 
 Cluster-scoped values would be accessible to every node in n8n cluster.
 
-## Actions
+## Node Actions
 
 ### setValue
 
