@@ -1,5 +1,5 @@
 {
-  "name": "n8n-nodes-kv-storage",
+  "name": "@telepilotco/n8n-nodes-kv-storage",
   "version": "0.0.1",
   "description": "Key-Value Storage Node for n8n supporting different scopes",
   "keywords": [
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/telepilotco/n8n-nodes-kv-storage.git"
+    "url": "git+https://github.com/telepilotco/n8n-nodes-kv-storage.git"
   },
   "main": "index.js",
   "scripts": {
@@ -56,5 +56,8 @@
   "dependencies": {
     "debug": "^4.3.4",
     "typedi": "^0.10.0"
+  },
+  "bugs": {
+    "url": "https://github.com/telepilotco/n8n-nodes-kv-storage/issues"
   }
 }
