@@ -11,9 +11,6 @@ importers:
       '@n8n/di':
         specifier: ^0.4.0
         version: 0.4.0
-      debug:
-        specifier: ^4.3.4
-        version: 4.4.1
     devDependencies:
       '@types/express':
         specifier: ^4.17.6
@@ -38,10 +35,10 @@ importers:
         version: 4.0.2
       n8n-core:
         specifier: ^1.82.0
-        version: 1.93.0(debug@4.4.1)
+        version: 1.93.0
       n8n-workflow:
         specifier: ^1.82.0
-        version: 1.82.0(debug@4.4.1)
+        version: 1.82.0
       prettier:
         specifier: ^2.7.1
         version: 2.8.8
@@ -3765,18 +3762,18 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@n8n/backend-common@0.4.0(debug@4.4.1)':
+  '@n8n/backend-common@0.4.0':
     dependencies:
       '@n8n/constants': 0.3.0
       '@n8n/di': 0.5.0
-      n8n-workflow: 1.92.0(debug@4.4.1)
+      n8n-workflow: 1.92.0
       reflect-metadata: 0.2.2
     transitivePeerDependencies:
       - debug
 
-  '@n8n/client-oauth2@0.25.0(debug@4.4.1)':
+  '@n8n/client-oauth2@0.25.0':
     dependencies:
-      axios: 1.8.3(debug@4.4.1)
+      axios: 1.8.3
     transitivePeerDependencies:
       - debug
 
@@ -3788,13 +3785,13 @@ snapshots:
 
   '@n8n/constants@0.3.0': {}
 
-  '@n8n/decorators@0.5.0(debug@4.4.1)':
+  '@n8n/decorators@0.5.0':
     dependencies:
       '@n8n/constants': 0.3.0
       '@n8n/di': 0.5.0
       '@n8n/permissions': 0.25.0
       lodash: 4.17.21
-      n8n-workflow: 1.92.0(debug@4.4.1)
+      n8n-workflow: 1.92.0
     transitivePeerDependencies:
       - debug
 
@@ -4834,17 +4831,17 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  axios@1.8.2(debug@4.4.1):
+  axios@1.8.2:
     dependencies:
-      follow-redirects: 1.15.9(debug@4.4.1)
+      follow-redirects: 1.15.9
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
 
-  axios@1.8.3(debug@4.4.1):
+  axios@1.8.3:
     dependencies:
-      follow-redirects: 1.15.9(debug@4.4.1)
+      follow-redirects: 1.15.9
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -5577,9 +5574,7 @@ snapshots:
 
   fn.name@1.1.0: {}
 
-  follow-redirects@1.15.9(debug@4.4.1):
-    optionalDependencies:
-      debug: 4.4.1
+  follow-redirects@1.15.9: {}
 
   for-each@0.3.5:
     dependencies:
@@ -6293,17 +6288,17 @@ snapshots:
 
   mute-stdout@1.0.1: {}
 
-  n8n-core@1.93.0(debug@4.4.1):
+  n8n-core@1.93.0:
     dependencies:
       '@aws-sdk/client-s3': 3.808.0
       '@langchain/core': 0.3.30
-      '@n8n/backend-common': 0.4.0(debug@4.4.1)
-      '@n8n/client-oauth2': 0.25.0(debug@4.4.1)
+      '@n8n/backend-common': 0.4.0
+      '@n8n/client-oauth2': 0.25.0
       '@n8n/config': 1.40.0
-      '@n8n/decorators': 0.5.0(debug@4.4.1)
+      '@n8n/decorators': 0.5.0
       '@n8n/di': 0.5.0
       '@sentry/node': 8.52.1
-      axios: 1.8.3(debug@4.4.1)
+      axios: 1.8.3
       callsites: 3.1.0
       chardet: 2.0.0
       cron: 3.1.7
@@ -6315,7 +6310,7 @@ snapshots:
       lodash: 4.17.21
       luxon: 3.4.4
       mime-types: 2.1.35
-      n8n-workflow: 1.92.0(debug@4.4.1)
+      n8n-workflow: 1.92.0
       nanoid: 3.3.8
       oauth-1.0a: 2.2.6
       p-cancelable: 2.1.1
@@ -6333,12 +6328,12 @@ snapshots:
       - openai
       - supports-color
 
-  n8n-workflow@1.82.0(debug@4.4.1):
+  n8n-workflow@1.82.0:
     dependencies:
       '@n8n/tournament': 1.0.6
       '@n8n_io/riot-tmpl': 4.0.0
       ast-types: 0.15.2
-      axios: 1.8.2(debug@4.4.1)
+      axios: 1.8.2
       callsites: 3.1.0
       deep-equal: 2.2.0
       esprima-next: 5.8.4
@@ -6357,11 +6352,11 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  n8n-workflow@1.92.0(debug@4.4.1):
+  n8n-workflow@1.92.0:
     dependencies:
       '@n8n/tournament': 1.0.6
       ast-types: 0.15.2
-      axios: 1.8.3(debug@4.4.1)
+      axios: 1.8.3
       callsites: 3.1.0
       deep-equal: 2.2.0
       esprima-next: 5.8.4

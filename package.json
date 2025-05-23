@@ -55,7 +55,6 @@
     "typescript": "~4.8.4"
   },
   "dependencies": {
-    "debug": "^4.3.4",
     "@n8n/di": "^0.4.0"
   },
   "bugs": {
