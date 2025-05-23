@@ -3,8 +3,8 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	ITriggerFunctions,
-	ITriggerResponse,
-} from 'n8n-workflow';
+	ITriggerResponse, NodeConnectionType
+} from "n8n-workflow";
 import { EventType, KvStorageService, Scope } from './KvStorageService';
 import { Container } from 'typedi';
 
@@ -23,7 +23,8 @@ export class KvStorageTrigger implements INodeType {
 			name: 'KVStorage Trigger',
 		},
 		inputs: [],
-		outputs: ['main'],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
+		outputs: [NodeConnectionType.Main],
 		credentials: [],
 		properties: [
 			{

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { IExecuteFunctions } from 'n8n-core';
+import type { IExecuteFunctions } from 'n8n-workflow';
 
-import { INodeExecutionData, INodeType, INodeTypeDescription } from 'n8n-workflow';
+import { INodeExecutionData, INodeType, INodeTypeDescription, NodeConnectionType } from "n8n-workflow";
 import { Container } from 'typedi';
 import { KvStorageService, Scope } from './KvStorageService';
 
@@ -19,8 +19,10 @@ export class KvStorage implements INodeType {
 		},
 
 		credentials: [],
-		inputs: ['main'],
-		outputs: ['main'],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
+		inputs: [NodeConnectionType.Main],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
+		outputs: [NodeConnectionType.Main],
 		properties: [
 			{
 				displayName: 'Operation',
