@@ -1,6 +1,6 @@
 {
   "name": "@telepilotco/n8n-nodes-kv-storage",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Key-Value Storage Node for n8n supporting different scopes",
   "keywords": [
     "key-value",
