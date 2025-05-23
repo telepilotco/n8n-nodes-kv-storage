@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import type { IExecuteFunctions } from 'n8n-workflow';
 
 import { INodeExecutionData, INodeType, INodeTypeDescription, NodeConnectionType } from "n8n-workflow";
-import { Container } from 'typedi';
+import { Container } from '@n8n/di';
 import { KvStorageService, Scope } from './KvStorageService';
 
 export class KvStorage implements INodeType {

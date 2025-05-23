@@ -6,7 +6,7 @@ import {
 	ITriggerResponse, NodeConnectionType
 } from "n8n-workflow";
 import { EventType, KvStorageService, Scope } from './KvStorageService';
-import { Container } from 'typedi';
+import { Container } from '@n8n/di';
 
 const debug = require('debug')('kv-storage');
 

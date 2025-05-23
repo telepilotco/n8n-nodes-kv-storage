@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Service } from 'typedi';
+import { Service } from '@n8n/di';
 import { IDataObject } from 'n8n-workflow';
 
 const debug = require('debug')('kv-storage');
