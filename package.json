@@ -1,6 +1,6 @@
 {
   "name": "@telepilotco/n8n-nodes-kv-storage",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Key-Value Storage Node for n8n supporting different scopes",
   "keywords": [
     "key-value",
@@ -48,15 +48,14 @@
     "eslint": "8",
     "eslint-plugin-n8n-nodes-base": "^1.11.0",
     "gulp": "^4.0.2",
-    "n8n-core": "^0.161.0",
-    "n8n-workflow": "^0.143.0",
+    "n8n-core": "^1.82.0",
+    "n8n-workflow": "^1.82.0",
     "prettier": "^2.7.1",
     "tslint": "^6.1.2",
     "typescript": "~4.8.4"
   },
   "dependencies": {
-    "debug": "^4.3.4",
-    "typedi": "^0.10.0"
+    "@n8n/di": "^0.4.0"
   },
   "bugs": {
     "url": "https://github.com/telepilotco/n8n-nodes-kv-storage/issues"

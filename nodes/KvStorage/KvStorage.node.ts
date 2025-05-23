@@ -1,8 +1,8 @@
 import 'reflect-metadata';
-import { IExecuteFunctions } from 'n8n-core';
+import type { IExecuteFunctions } from 'n8n-workflow';
 
-import { INodeExecutionData, INodeType, INodeTypeDescription } from 'n8n-workflow';
-import { Container } from 'typedi';
+import { INodeExecutionData, INodeType, INodeTypeDescription, NodeConnectionType } from "n8n-workflow";
+import { Container } from '@n8n/di';
 import { KvStorageService, Scope } from './KvStorageService';
 
 export class KvStorage implements INodeType {
@@ -19,8 +19,10 @@ export class KvStorage implements INodeType {
 		},
 
 		credentials: [],
-		inputs: ['main'],
-		outputs: ['main'],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
+		inputs: [NodeConnectionType.Main],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
+		outputs: [NodeConnectionType.Main],
 		properties: [
 			{
 				displayName: 'Operation',
@@ -175,62 +177,65 @@ export class KvStorage implements INodeType {
 	// The execute method will go here
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		const items = this.getInputData();
 		const returnData = [];
-
-		const operation = this.getNodeParameter('operation', 0) as string;
-
-		let specifier = '';
-		let scope = Scope.ALL;
-
-		try {
-			const scopeVar = this.getNodeParameter('scope', 0) as keyof typeof Scope;
-			scope = Scope[scopeVar];
-			switch (scope) {
-				case Scope.EXECUTION:
-					specifier = this.getNodeParameter('executionId', 0) as string;
-					break;
-				case Scope.WORKFLOW:
-					specifier = this.getWorkflow().id as string;
-					break;
-				case Scope.INSTANCE:
-					specifier = 'N8N';
-					break;
-				default:
-					break;
-			}
-		} catch (e) {
-			//no scope provided, we are in 'listAllKeyValuesInAllScopes' option
-		}
 
 		const service = Container.get(KvStorageService);
 
-		if (operation === 'listAllKeyValuesInAllScopes') {
-			const result = service.listAllKeyValuesInAllScopes();
-			returnData.push(result);
-		} else if (operation === 'listAllScopeKeys') {
-			const result = service.listAllKeysInScope(scope, specifier);
-			returnData.push(result);
-		} else if (operation === 'listAllKeyValues') {
-			const result = service.listAllKeyValuesInScope(scope, specifier);
-			returnData.push(result);
-		} else if (operation === 'getValue') {
-			const key = this.getNodeParameter('key', 0) as string;
+		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+			const operation = this.getNodeParameter('operation', itemIndex) as string;
 
-			const result = service.getValue(key, scope, specifier);
-			returnData.push(result);
-		} else if (operation === 'setValue') {
-			const key = this.getNodeParameter('key', 0) as string;
-			const val = this.getNodeParameter('val', 0) as string;
-			const ttl = this.getNodeParameter('ttl', 0, -1) as number;
+			let specifier = '';
+			let scope = Scope.ALL;
 
-			const result = service.setValue(key, val, scope, specifier, ttl);
-			returnData.push(result);
-		} else if (operation === 'incrementValue') {
-			const key = this.getNodeParameter('key', 0) as string;
-			const ttl = this.getNodeParameter('ttl', 0, -1) as number;
+			try {
+				const scopeVar = this.getNodeParameter('scope', itemIndex) as keyof typeof Scope;
+				scope = Scope[scopeVar];
+				switch (scope) {
+					case Scope.EXECUTION:
+						specifier = this.getNodeParameter('executionId', itemIndex) as string;
+						break;
+					case Scope.WORKFLOW:
+						specifier = this.getWorkflow().id as string;
+						break;
+					case Scope.INSTANCE:
+						specifier = 'N8N';
+						break;
+					default:
+						break;
+				}
+			} catch (e) {
+				//no scope provided, we are in 'listAllKeyValuesInAllScopes' option
+			}
 
-			const result = service.incrementValue(key, scope, specifier, ttl);
-			returnData.push(result);
+			if (operation === 'listAllKeyValuesInAllScopes') {
+				const result = service.listAllKeyValuesInAllScopes();
+				returnData.push(result);
+			} else if (operation === 'listAllScopeKeys') {
+				const result = service.listAllKeysInScope(scope, specifier);
+				returnData.push(result);
+			} else if (operation === 'listAllKeyValues') {
+				const result = service.listAllKeyValuesInScope(scope, specifier);
+				returnData.push(result);
+			} else if (operation === 'getValue') {
+				const key = this.getNodeParameter('key', itemIndex) as string;
+
+				const result = service.getValue(key, scope, specifier);
+				returnData.push(result);
+			} else if (operation === 'setValue') {
+				const key = this.getNodeParameter('key', itemIndex) as string;
+				const val = this.getNodeParameter('val', itemIndex) as string;
+				const ttl = this.getNodeParameter('ttl', itemIndex, -1) as number;
+
+				const result = service.setValue(key, val, scope, specifier, ttl);
+				returnData.push(result);
+			} else if (operation === 'incrementValue') {
+				const key = this.getNodeParameter('key', itemIndex) as string;
+				const ttl = this.getNodeParameter('ttl', itemIndex, -1) as number;
+
+				const result = service.incrementValue(key, scope, specifier, ttl);
+				returnData.push(result);
+			}
 		}
 
 		return [this.helpers.returnJsonArray(returnData)];
